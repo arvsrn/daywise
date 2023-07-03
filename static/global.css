@@ -1,0 +1,41 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+@font-face {
+    font-family: Menlo;
+    src: url(./Menlo-Regular.ttf);
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0px;
+    padding: 0px;
+
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+}
+
+:root {
+    --gray_: #1E1E1E;
+    --gray0: #202020;
+    --gray1: #232323;
+    --gray2: #262626;
+    --gray3: #303030;
+    --gray4: #404040;
+    --gray5: #464646;
+    --gray6: #A0A0A0;
+    --gray7: #EDEDED;
+
+    --ease: cubic-bezier(.31,.14,.29,.99);
+
+    --red: #E43D32;
+    --orange: #FD7941;
+    --yellow: #EFB93F;
+    --green: #64C887;
+    --blue: #4BA5DB;
+    --purple: #955BF1;
+    --gray: #B4B4B4;
+}
+
+body {
+    background: var(--gray0);
+}
