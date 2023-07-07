@@ -43,7 +43,7 @@
         width: fit-content;
 
         border-radius: 6px;
-        color: var(--gray7);
+        color: var(--gray8);
 
         animation: enter 0.15s var(--ease);
         position: absolute;

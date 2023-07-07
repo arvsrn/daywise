@@ -40,11 +40,7 @@
     }
 
     p {
-        display: flex;
-        flex-direction: column;
-        flex: 1 0 0;
-
-        color: var(--gray7);
+        color: var(--gray8);
         font-size: 11px;
         font-family: Inter;
         font-style: normal;
@@ -61,7 +57,7 @@
     }
 
     main.checked > p {
-        color: var(--gray6);
+        color: var(--gray7);
         text-decoration: line-through;
     }
 </style>

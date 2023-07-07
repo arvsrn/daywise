@@ -18,7 +18,7 @@
         border-radius: 6px;
         background: var(--gray3);
 
-        color: var(--gray7);
+        color: var(--gray8);
         font-size: 11px;
         font-family: Inter;
         font-style: normal;
@@ -33,7 +33,7 @@
     }
 
     button.primary {
-        background: var(--gray9);
+        background: var(--gray8);
         color: var(--gray0);
     }
 

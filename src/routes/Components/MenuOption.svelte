@@ -55,7 +55,7 @@
     }
 
     main.normal {
-        color: var(--gray7);
+        color: var(--gray8);
     }
 
     main:hover {
@@ -73,7 +73,7 @@
     main > p {
         font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
         font-size: 11px;
-        color: var(--gray6);
+        color: var(--gray7);
         margin-left: auto;
     }
 

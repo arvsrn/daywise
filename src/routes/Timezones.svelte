@@ -5,10 +5,10 @@
 
     export let scroll: number;
     let self: HTMLElement;
-    let mounted: boolean = true;
+    let mounted: boolean = false;
 
     const onScroll = () => {
-        if (mounted && self) self.scrollTop = scroll;
+        if (mounted && self) self.scroll(0, scroll);
     }
 
     onMount(() => mounted = true);
@@ -37,10 +37,10 @@
         align-items: center;
         padding: 0px 8px;
 
-        overflow-y: scroll;
-        overflow-x: visible;
-
         height: 100vh;
+
+        overflow: scroll;
+        overflow-x: visible;
     }
 
     main::-webkit-scrollbar {
@@ -51,7 +51,7 @@
         font-size: 11px;
         font-family: Inter;
         line-height: 16px;
-        color: var(--gray6);
+        color: var(--gray7);
 
         user-select: none;
     }

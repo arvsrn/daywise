@@ -42,9 +42,9 @@
         background: var(--gray1);
         
         border: 1px solid var(--gray3);
-        box-shadow: rgba(15, 15, 15, 0.1) 0px 0px 0px 1px, 
-            rgba(15, 15, 15, 0.2) 0px 3px 6px, 
-            rgba(15, 15, 15, 0.4) 0px 9px 24px;
+        box-shadow: rgba(15, 15, 15, 0.025) 0px 0px 0px 1px, 
+            rgba(15, 15, 15, 0.05) 0px 3px 6px, 
+            rgba(15, 15, 15, 0.1) 0px 9px 24px;
         border-radius: 6px;
 
         width: 100%;
@@ -78,11 +78,9 @@
         100% {
             transform: translateY(0px);
             opacity: 100%;
-            box-shadow: 0px 13px 5px rgba(0, 0, 0, 0.01), 
-                0px 7px 4px rgba(0, 0, 0, 0.05), 
-                0px 3px 3px rgba(0, 0, 0, 0.09), 
-                0px 1px 2px rgba(0, 0, 0, 0.1), 
-                0px 0px 0px rgba(0, 0, 0, 0.1);
+            box-shadow: rgba(15, 15, 15, 0.025) 0px 0px 0px 1px, 
+                rgba(15, 15, 15, 0.05) 0px 3px 6px, 
+                rgba(15, 15, 15, 0.1) 0px 9px 24px;
         }
     }
 </style>

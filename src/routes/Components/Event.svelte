@@ -1,7 +1,7 @@
 <script lang="ts">
     import { app } from "../../state";
-  import Menu from "./Menu.svelte";
-  import MenuOption from "./MenuOption.svelte";
+    import Menu from "./Menu.svelte";
+    import MenuOption from "./MenuOption.svelte";
     
     const enum Drag {
         TOP,
@@ -13,11 +13,13 @@
     let hour: number = 60 * ($app.zoom / 100); // how big an hour is in pixels
     let quarter: number = hour / 4;
 
-    export let color: 'red' | 'orange' | 'yellow' | 'green' | 'blue' | 'purple' | 'gray' = 'orange';
+    type Color = 'red' | 'orange' | 'yellow' | 'green' | 'blue' | 'purple' | 'gray' | 'pink';
+    export let color: Color = 'orange';
+    const colors: Array<Color> = ['red', 'orange', 'yellow', 'green', 'blue', 'purple', 'pink', 'gray'];
 
     let selected: boolean = false;
-    let startTime: number = hour * 2;
-    let endTime: number = hour * 3;
+    export let startTime: number = hour * 2;
+    export let endTime: number = hour * 3;
     let dragging: Drag = Drag.NONE;
     let mX: number = 0;
     let mY: number = 0;
@@ -80,38 +82,90 @@
         const dY = Math.abs(e.pageY - mY);
 
         if (dX < 6 && dY < 6) { // click
-            selected = !selected;
+            // wait for 1ms because clickOutside of any other selected 
+            // event would set $app.eventSelected to false
+            setTimeout(() => selected = !selected, 1);
         }
     }
 
-    $: $app.eventSelected = selected;
+    $: selected, $app.eventSelected = selected;
     $: finalEndTime = endTime - (endTime % 15)
     $: finalStartTime = startTime - (startTime % 15);
 
     app.subscribe(u => hour = 60 * (u.zoom / 100));
     $: quarter = hour / 4;
+
+    export function clickOutside(
+        node: HTMLElement,
+        handler: () => void
+    ): { destroy: () => void } {
+        console.log(document.getElementById('viewport'));
+        const onClick = (event: MouseEvent) =>
+            node &&
+            !node.contains(event.target as HTMLElement) &&
+            !event.defaultPrevented &&
+            // @ts-ignore muhahaha 
+            document.getElementById('viewport')?.contains(event.target) &&
+            handler();
+
+            document.addEventListener('click', onClick, true);
+            document.addEventListener('contextmenu', onClick, true);
+
+        return {
+            destroy() {
+                document.removeEventListener('click', onClick, true);
+                document.removeEventListener('contextmenu', onClick, true);
+            },
+        };
+    };
+
+    const manageShortcuts = (e: KeyboardEvent) => {
+        if (document.activeElement) {
+            if (document.activeElement.tagName == 'INPUT' || (document.activeElement as HTMLElement).contentEditable === 'true') return;
+        }
+        
+        if (selected && e.code.startsWith('Digit')) {
+            const number = parseInt(e.key);
+            if (number > 8 || number === 0) return;
+            color = colors[number - 1];
+        }
+    };
+
+    export let title: string;
+    export let description: string; 
 </script>
 
-<main style:--color="var(--{color})" class:selected={selected} style:top="{hour/60 * finalStartTime}px" style:height="{hour/60 * (finalEndTime - finalStartTime)}px"on:contextmenu|preventDefault={event => {
+<main style:--color="var(--{color})" class:selected={selected} use:clickOutside={() => selected = false} style:top="{hour/60 * finalStartTime}px" style:height="{hour/60 * (finalEndTime - finalStartTime)}px"on:contextmenu|preventDefault={event => {
     showing = true;
     mouse = [event.clientX, event.clientY];
 }} >
-    <div class="container" on:mouseup={onMouseUp} on:mousedown={onMouseDown} >
+    <div class="container" on:mouseup={onMouseUp} on:mousedown={onMouseDown}>
         <div class="color"></div>
         <div>
-            <h1>Alex Vance</h1>
-            <p>Meet with him for a project proposal</p>
-            <p class="time">4—6PM</p>
+            <h1>{title}</h1>
+            <p>{description}</p>
+            <p class="time">
+                {
+                    Math.floor(finalStartTime/60) <= 12 ? 
+                        Math.floor(finalStartTime/60) 
+                        : Math.floor(finalStartTime/60) - 12
+                }{Math.floor(((finalStartTime/60)%1)*60) !== 0 ? `:${Math.floor(((finalStartTime/60)%1)*60) < 10 ? '0' + Math.floor(((finalStartTime/60)%1)*60) : Math.floor(((finalStartTime/60)%1)*60)}` : ''}{
+                    (Math.floor(finalEndTime/60) < 12 ? 'AM' : 'PM') ===
+                    (Math.floor(finalStartTime/60) < 12 ? 'AM' : 'PM') ? '' : (Math.floor(finalStartTime/60) < 12 ? 'AM' : 'PM')
+                }—{
+                    Math.floor(finalEndTime/60) <= 12 ? 
+                        Math.floor(finalEndTime/60) 
+                        : Math.floor(finalEndTime/60) - 12
+                }{Math.floor(((finalEndTime/60)%1)*60) !== 0 ? `:${Math.floor(((finalEndTime/60)%1)*60) < 10 ? '0' + Math.floor(((finalEndTime/60)%1)*60) : Math.floor(((finalEndTime/60)%1)*60)}` : ''}{
+                    Math.floor(finalEndTime/60) < 12 ? 'AM' : 'PM'
+                }
+            </p>
         </div>
     </div>
 
     <div class="handle top" on:mousedown={() => dragging = Drag.TOP}></div>
     <div class="handle bottom" on:mousedown={() => dragging = Drag.BOTTOM}></div>
 </main>
-
-<svelte:window on:mouseup={() => {
-    dragging = Drag.NONE;
-}} on:mousemove={onMouseMove} />
 
 {#if showing}
 <div style="width:140px;height:fit-content;position:fixed;left:{mouse[0]}px;top:{mouse[1]}px;z-index:200;">
@@ -122,6 +176,8 @@
     </Menu>
 </div>
 {/if}
+
+<svelte:window on:mouseup={() => dragging = Drag.NONE} on:mousemove={onMouseMove} on:keypress={manageShortcuts} />
 
 <style>
     main {
@@ -148,6 +204,7 @@
 
     main.selected {
         border: 1px solid var(--color);
+        background: color-mix(in srgb, var(--color) 25%, var(--gray0));
     }
 
     div.container {

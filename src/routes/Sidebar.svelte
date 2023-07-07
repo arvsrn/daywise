@@ -1,13 +1,18 @@
 <script lang="ts">
     import SingleLine from "./Components/SingleLineInput.svelte";
+    import MultiLine from "./Components/MultiLineInput.svelte";
     import ClickableChip from "./Components/ClickableChip.svelte";
     import TodoItem from "./Components/TodoItem.svelte";
-    import { app } from "../state";    
+    import { app, monthNames } from "../state";    
     import Tooltip from "./Components/Tooltip.svelte";
     import Menu from "./Components/Menu.svelte";
     import MenuOption from "./Components/MenuOption.svelte";
     import Calendar from "./Components/Calendar.svelte";
+    import Notification from "./Components/Notification.svelte";
+    import TodoProgress from "./Components/TodoProgress.svelte";
+    import TodoInput from "./Components/TodoInput.svelte";
 
+    let showingNotifications: boolean = false;
     let showingAccountSettingsMenu: boolean = false;
 
     // editing event state variables
@@ -16,6 +21,8 @@
     let showingCalendars: boolean = false;
 
     let busy: boolean = true;
+
+    export let setDay: (date: Date) => void;
 </script>
 
 <main>
@@ -30,8 +37,17 @@
                 </button>
             </Tooltip>
             <Tooltip tooltip="Notifications">
-                <button>
-                    <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8.60124 1.25086C8.60124 1.75459 8.26278 2.17927 7.80087 2.30989C10.1459 2.4647 12 4.41582 12 6.79999V10.25C12 11.0563 12.0329 11.7074 12.7236 12.0528C12.931 12.1565 13.0399 12.3892 12.9866 12.6149C12.9333 12.8406 12.7319 13 12.5 13H8.16144C8.36904 13.1832 8.49997 13.4513 8.49997 13.75C8.49997 14.3023 8.05226 14.75 7.49997 14.75C6.94769 14.75 6.49997 14.3023 6.49997 13.75C6.49997 13.4513 6.63091 13.1832 6.83851 13H2.49999C2.2681 13 2.06664 12.8406 2.01336 12.6149C1.96009 12.3892 2.06897 12.1565 2.27638 12.0528C2.96708 11.7074 2.99999 11.0563 2.99999 10.25V6.79999C2.99999 4.41537 4.85481 2.46396 7.20042 2.3098C6.73867 2.17908 6.40036 1.75448 6.40036 1.25086C6.40036 0.643104 6.89304 0.150421 7.5008 0.150421C8.10855 0.150421 8.60124 0.643104 8.60124 1.25086ZM7.49999 3.29999C5.56699 3.29999 3.99999 4.86699 3.99999 6.79999V10.25L4.00002 10.3009C4.0005 10.7463 4.00121 11.4084 3.69929 12H11.3007C10.9988 11.4084 10.9995 10.7463 11 10.3009L11 10.25V6.79999C11 4.86699 9.43299 3.29999 7.49999 3.29999Z" fill="currentColor" fill-rule="evenodd" clip-rule="evenodd"></path></svg>
+                <button on:click={() => showingNotifications = !showingNotifications}>
+                    <!--
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M5.75 11.4H3.5V7C3.6875 5.53333 4.85 2.6 8 2.6C11.15 2.6 12.3125 5.53333 12.5 7V11.4H10.25M5.75 11.4C5.75 12.1333 6.2 13.6 8 13.6C9.8 13.6 10.25 12.1333 10.25 11.4M5.75 11.4H10.25" stroke="currentColor"/>
+                    </svg> 
+                    --> 
+                    
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M8 2.6C4.85 2.6 3.6875 5.53333 3.5 7V11.4H5.75M12.5 7V11.4H10.25M5.75 11.4C5.75 12.1333 6.2 13.6 8 13.6C9.8 13.6 10.25 12.1333 10.25 11.4M5.75 11.4H10.25" stroke="currentColor"/>
+                        <circle cx="11" cy="4" r="2" fill="#FF0000"/>
+                    </svg>                        
                 </button>
             </Tooltip>
             <div style="position:relative;display:flex;align-items:center;justify-content:center;">
@@ -50,6 +66,8 @@
                                         <MenuOption label="5" action={() => $app.days = 5}>5 days</MenuOption>
                                         <MenuOption label="6" action={() => $app.days = 6}>6 days</MenuOption>
                                         <MenuOption label="7" action={() => $app.days = 7}>7 days</MenuOption>
+                                        <MenuOption label="8" action={() => $app.days = 8}>8 days</MenuOption>
+                                        <MenuOption label="9" action={() => $app.days = 9}>9 days</MenuOption>
                                     </Menu>
                                 </div>
                             </MenuOption>
@@ -64,7 +82,7 @@
                                 </div>
                             </MenuOption>
                             <MenuOption label="⌘K">Command Menu</MenuOption>
-                            <MenuOption label="⌘S">Preferences</MenuOption>
+                            <MenuOption label="⌘S" action={() => $app.showingSettings = true}>Preferences</MenuOption>
                             <MenuOption appearance="danger">Logout</MenuOption>
                         </Menu>
                     </div>
@@ -72,35 +90,49 @@
             </div>
         </div>
     </section>
-    {#if !$app.eventSelected}
+    
+    {#if showingNotifications}
+        <Notification title="Aarav commented in Team" description="Where is this? Can someone add a link?" buttons={[{
+            text: 'See',
+            action: () => {},
+            primary: false,
+        }]}></Notification>
+        <Notification title="Aarav invited you to an event" description="" buttons={[
+            {
+                text: 'Accept',
+                action: () => {},
+                primary: true,
+            },
+            {
+                text: 'See',
+                action: () => {},
+                primary: false,
+            }
+        ]}></Notification>
+        <Notification title="No notifications 🍃" description="" buttons={[]}></Notification>
+    {:else if !$app.eventSelected}
         <section>
-            <Calendar setDay={() => {}}></Calendar>
+            <Calendar {setDay}></Calendar>
         </section>
         <section>
             <p>Today's Tasks</p>
-            <TodoItem>Meet with Alex Vance to discuss project proposal.</TodoItem>
+            <TodoItem>Meet with <i>Alex Vance</i> to <b>discuss</b> project proposal.</TodoItem>
             <TodoItem>Send out marketing emails.</TodoItem>
             <TodoItem checked>Research new marketing strategies.</TodoItem>
             <TodoItem checked>Plan a team-building event for next month, i.e. August.</TodoItem>
+            <TodoProgress percentage={50}></TodoProgress>
         </section>
     {:else}
         <section style="flex-direction:row;align-items:center;">
             <p>1:30PM</p>
-            <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8.14645 3.14645C8.34171 2.95118 8.65829 2.95118 8.85355 3.14645L12.8536 7.14645C13.0488 7.34171 13.0488 7.65829 12.8536 7.85355L8.85355 11.8536C8.65829 12.0488 8.34171 12.0488 8.14645 11.8536C7.95118 11.6583 7.95118 11.3417 8.14645 11.1464L11.2929 8H2.5C2.22386 8 2 7.77614 2 7.5C2 7.22386 2.22386 7 2.5 7H11.2929L8.14645 3.85355C7.95118 3.65829 7.95118 3.34171 8.14645 3.14645Z" fill="var(--gray6)" fill-rule="evenodd" clip-rule="evenodd"></path></svg>
+            <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8.14645 3.14645C8.34171 2.95118 8.65829 2.95118 8.85355 3.14645L12.8536 7.14645C13.0488 7.34171 13.0488 7.65829 12.8536 7.85355L8.85355 11.8536C8.65829 12.0488 8.34171 12.0488 8.14645 11.8536C7.95118 11.6583 7.95118 11.3417 8.14645 11.1464L11.2929 8H2.5C2.22386 8 2 7.77614 2 7.5C2 7.22386 2.22386 7 2.5 7H11.2929L8.14645 3.85355C7.95118 3.65829 7.95118 3.34171 8.14645 3.14645Z" fill="var(--gray7)" fill-rule="evenodd" clip-rule="evenodd"></path></svg>
             <p>2:30PM</p>
 
-            <p style="margin-left:auto;color:var(--gray6)">2 hours</p>
-            <Tooltip tooltip="Go to event">
-                <button>
-                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path fill-rule="evenodd" clip-rule="evenodd" d="M4.14645 11.8536C3.95118 11.6583 3.95118 11.3417 4.14645 11.1465L10.7929 4.5H6.5C6.22386 4.5 6 4.27614 6 4C6 3.72386 6.22386 3.5 6.5 3.5H12C12.1326 3.5 12.2598 3.55268 12.3536 3.64645C12.4473 3.74022 12.5 3.86739 12.5 4V9.50001C12.5 9.77615 12.2761 10 12 10C11.7239 10 11.5 9.77615 11.5 9.50001V5.20711L4.85355 11.8536C4.65829 12.0488 4.34171 12.0488 4.14645 11.8536Z" fill="currentColor"/>
-                    </svg>   
-                </button>
-            </Tooltip>
+            <p style="margin-left:auto;color:var(--gray7)">2 hours</p>
         </section>
         <section>
             <SingleLine placeholder="Name"></SingleLine>
-            <SingleLine placeholder="Description"></SingleLine>
+            <MultiLine placeholder="Description"></MultiLine>
             <SingleLine placeholder="Location or call"></SingleLine>
         </section>
         <section>
@@ -195,6 +227,7 @@
         <section>
             <p>Tasks for this event</p>
             <TodoItem>Meet with Alex Vance to discuss project proposal.</TodoItem>
+            <TodoInput></TodoInput>
         </section>
     {/if}
 </main>
@@ -229,7 +262,7 @@
     }
 
     section.heading > p {
-        color: var(--gray7);
+        color: var(--gray8);
         font-size: 14px;
         font-family: Inter;
         font-style: normal;
@@ -239,7 +272,7 @@
 
     section.heading > p > span {
         font-weight: normal;
-        color: var(--gray6);
+        color: var(--gray7);
     }
 
     section:not(.heading) {
@@ -254,7 +287,7 @@
     }
 
     section:not(.heading) > p {
-        color: var(--gray7);
+        color: var(--gray8);
         font-size: 11px;
         font-family: Inter;
         font-style: normal;
@@ -292,7 +325,7 @@
     }
 
     div.settings-row > p {
-        color: var(--gray6);
+        color: var(--gray7);
         width: 100%;
         font-size: 11px;
         font-family: Inter;
@@ -314,14 +347,14 @@
         background: none;
         border: none;
         outline: none;
-        color: var(--gray6);
+        color: var(--gray7);
         
         transition: background 0.15s var(--ease),
             color 0.15s var(--ease);
     }
 
     button:hover {
-        color: var(--gray7);
+        color: var(--gray8);
         background: var(--gray3);
     }
 </style>

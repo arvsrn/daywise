@@ -1,6 +1,6 @@
 <script lang="ts">
     import { onMount } from "svelte";
-    import { app } from "../state";  
+    import { app, monthNames, dayNames, type Month } from "../state";  
     import ClickableChip from "./Components/ClickableChip.svelte";
     import Event from "./Components/Event.svelte";
 
@@ -8,9 +8,6 @@
     
     const snapThreshold = 250;
     const day = 8_64_00_000; // one day in milliseconds
-
-    const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
 
     let viewport: HTMLElement;
     let mounted: boolean = false;
@@ -24,6 +21,8 @@
     $app.currentYear = new Date(start).getUTCFullYear();
     $app.currentMonth = monthNames[new Date(start).getUTCMonth()];
 
+    export const setDay: (date: Date) => void = (date: Date) => start = +date;
+
     onMount(() => {
         mounted = true;
         width = viewport.clientWidth / $app.days;
@@ -36,9 +35,27 @@
     app.subscribe(u => {
         if (mounted) width = viewport.clientWidth / u.days;
     });
+
+    const manageShortcuts = (e: KeyboardEvent) => {
+        if (document.activeElement) {
+            if (document.activeElement.tagName == 'INPUT' || (document.activeElement as HTMLElement).contentEditable === 'true') return;
+        }
+
+        if (e.code == 'KeyS' && e.ctrlKey) $app.showingSettings = !$app.showingSettings;
+        else if (e.code == 'KeyT') start = +new Date();
+        else if (e.code == 'Equal' && e.ctrlKey) $app.days = Math.max(Math.min(9, $app.days + 1), 1);
+        else if (e.code == 'Minus' && e.ctrlKey) $app.days = Math.max(Math.min(9, $app.days - 1), 1);
+        else if (e.code == 'Equal') $app.zoom = Math.max(Math.min(300, $app.zoom + 25), 100);
+        else if (e.code == 'Minus') $app.zoom = Math.max(Math.min(300, $app.zoom - 25), 100);
+        else if (!$app.eventSelected && e.code.startsWith('Digit')) {
+            const number = parseInt(e.key);
+            if (number > 9 || number === 0) return;
+            $app.days = number;
+        }
+    };
 </script>
 
-<main bind:this={viewport} on:scroll|preventDefault={_ => {
+<main id="viewport" bind:this={viewport} on:scroll|preventDefault={_ => {
     scroll = viewport.scrollTop;
 
     lastScrollLeft = viewport.scrollLeft;
@@ -66,6 +83,10 @@
         viewport.scroll(width, viewport.scrollTop);
         start += day; // one day in ms
     }
+
+    const currentDate = new Date(start);
+    $app.currentMonth = monthNames[currentDate.getMonth()];
+    $app.currentYear = currentDate.getFullYear();
 }}>
     {#each [...Array($app.days + 2).keys()] as d}
         {@const currentDate = new Date(start + (d * day))}
@@ -83,7 +104,8 @@
                 {/if}
             </div>
             <div data-weekend={[0, 6].includes(currentDate.getDay())}>
-                <Event></Event>
+                <Event title="Alex Vance" description="Meeting with Alex Vance to discuss project proposal." startTime={60 * ($app.zoom / 100) * 2} endTime={60 * ($app.zoom / 100) * 3.5}></Event>
+                <Event title="Learn Plasticity" description="For 3D product renders and CAD models for the keyboard." startTime={60 * ($app.zoom / 100) * 4} endTime={60 * ($app.zoom / 100) * 6} color="blue"></Event>
                 
                 {#each [...Array(24).keys()] as i} 
                     <div class="hour-line" style:top="{60 * ($app.zoom / 100) * (i + 1)}px"></div>
@@ -92,6 +114,8 @@
         </section>
     {/each}
 </main>
+
+<svelte:window on:keypress={manageShortcuts} />
 
 <style>
     main {
@@ -120,7 +144,7 @@
         justify-content: center;
         gap: 36px;
 
-        color: var(--gray6);
+        color: var(--gray7);
         font-size: 11px;
         font-family: Inter;
         font-style: normal;

@@ -22,8 +22,9 @@
     --gray3: #303030;
     --gray4: #404040;
     --gray5: #464646;
-    --gray6: #A0A0A0;
-    --gray7: #EDEDED;
+    --gray6: #666666;
+    --gray7: #A0A0A0;
+    --gray8: #EDEDED;
 
     --ease: cubic-bezier(.31,.14,.29,.99);
 
@@ -33,7 +34,8 @@
     --green: #64C887;
     --blue: #4BA5DB;
     --purple: #955BF1;
-    --gray: #B4B4B4;
+    --pink: #D04CBF;
+    --gray: #999999;
 }
 
 body {

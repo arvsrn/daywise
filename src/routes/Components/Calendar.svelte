@@ -1,10 +1,8 @@
 <script lang="ts">
-    export let setDay: (to: Date) => void;
+    import { app, monthDays, monthIndices, monthNames, type Month } from "../../state";
+    import ClickableChip from "./ClickableChip.svelte";
 
-    const monthNames = ["January", "February", "March", "April", "May", "June",
-        "July", "August", "September", "October", "November", "December"
-    ];
-    const monthDays: number[] = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+    export let setDay: (to: Date) => void;
 
     let currentYear: number = 2023;    
     let currentMonth: number = new Date().getMonth();
@@ -30,12 +28,45 @@
         }
 
         offset = new Date(currentYear, currentMonth, 1).getDay();
+        $app.currentMonth = monthNames[currentMonth];
+        $app.currentYear = currentYear;
     };
 
     $: currentMonth, onCurrentMonthUpdate();
+    app.subscribe(u => currentMonth = monthIndices[u.currentMonth]);
 </script>
 
 <div class="calendar-container">
+    <div class="row">
+        <p></p>
+        <button on:click={() => setDay(new Date())}>
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M3.5 6.5C4.5 6.5 7 6.5 9 6.5C11 6.5 11.5 8.16667 11.5 9V9.5C11.5 10.1667 11.1 11.5 9.5 11.5H8.5M3.5 6.5L6.5 3.5M3.5 6.5L6.5 9.5" stroke="currentColor"/>
+            </svg>        
+        </button>
+        <button on:click={() => {
+            currentMonth -= 1;
+            if (currentMonth < 0) {
+                currentMonth = 11;
+                currentYear -= 1;
+            }
+        }}>
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M9.5 5.5L6.5 8.5L9.5 11.5" stroke="currentColor"/>
+            </svg>        
+        </button>
+        <button on:click={() => {
+            currentMonth += 1;
+            if (currentMonth > 11) {
+                currentMonth = 0;
+                currentYear += 1;
+            }
+        }}>
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M6.5 10.5L9.5 7.5L6.5 4.5" stroke="currentColor"/>
+            </svg>        
+        </button>
+    </div>
     <main>
         <div class="row">
             <div class="label dark static">Su</div>
@@ -53,14 +84,29 @@
                     <div class="label dark" on:click={() => currentMonth -= 1}>{31 - offset + x}</div>
                 {/each}
                 {#each [...Array(7-offset).keys()] as _, j}
-                    <div class="label" on:click={() => setDay(new Date(currentYear, currentMonth, 7 * i + j + 1))}>{7 * i + j + 1}</div>
+                {@const currentDay = new Date()}
+                <div class="label" on:click={() => setDay(new Date(currentYear, currentMonth, 7 * i + j + 1))}>
+                        {#if (7 * i + j + 1) == currentDay.getDate() && currentMonth == currentDay.getMonth()}
+                            <ClickableChip>{7 * i + j + 1}</ClickableChip>
+                        {:else}
+                            {7 * i + j + 1}    
+                        {/if}
+                    </div>
                 {/each}
             {:else}
                 {#each [...Array(7).keys()] as _, j}
+                    {@const currentDay = new Date()}
                     {#if ((7 * (i - 1)) + (7 - offset) + j + 1) <= monthDays[currentMonth]}
-                        <div class="label" on:click={() => setDay(new Date(currentYear, currentMonth, (7 * (i - 1)) + (7 - offset) + j + 1))}>{(7 * (i - 1)) + (7 - offset) + j + 1}</div>
+                        <div class="label" on:click={() => setDay(new Date(currentYear, currentMonth, (7 * (i - 1)) + (7 - offset) + j + 1))}>
+                            {#if ((7 * (i - 1)) + (7 - offset) + j + 1) == currentDay.getDate() && currentMonth == currentDay.getMonth()}
+                                <ClickableChip>{(7 * (i - 1)) + (7 - offset) + j + 1}</ClickableChip>
+                            {:else}
+                                {(7 * (i - 1)) + (7 - offset) + j + 1}
+                            {/if}
+                            
+                        </div>
                     {:else}
-                        <div class="label dark" on:click={() => currentMonth += 1}>{(7 * i + j + 1) - monthDays[currentMonth]}</div>
+                        <div class="label dark" on:click={() => currentMonth += 1}>{((7 * (i - 1)) + (7 - offset) + j + 1) - monthDays[currentMonth]}</div>
                     {/if}
                 {/each}
             {/if}
@@ -91,7 +137,7 @@
         font-size: 11px;
         font-family: Menlo;
         font-weight: 400;
-        color: var(--gray7);
+        color: var(--gray8);
 
         user-select: none;
         display: flex;
@@ -109,7 +155,7 @@
 
     div.label.static {
         cursor: default;
-        font-weight: 600;
+        color: var(--gray6);
     }
 
     div.label:not(.static):hover {
@@ -132,24 +178,36 @@
     }
 
     button {
-        outline: none;
-        border: none;
-        border-radius: 4px;
-
+        display: flex;
         width: 20px;
         height: 20px;
-
-        background: transparent;
-        cursor: pointer;
-        color: var(--gray6);
-
-        display: flex;
-        flex-direction: column;
-        align-items: center;
         justify-content: center;
+        align-items: center;
+        gap: 10px;
+
+        border-radius: 6px;
+        background: none;
+        border: none;
+        outline: none;
+        color: var(--gray7);
+        
+        transition: background 0.15s var(--ease),
+            color 0.15s var(--ease);
     }
 
     button:hover {
+        color: var(--gray8);
         background: var(--gray3);
+    }
+
+    p {
+        font-size: 11px;
+        font-weight: normal;
+        line-height: 16px;
+        color: var(--gray8);
+        font-family: Inter;
+
+        margin-right: auto;
+        margin-left: 8px;
     }
 </style>
